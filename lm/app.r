@@ -8,6 +8,8 @@
 #
 
 library(shiny)
+library(ggplot2)
+library(dplyr)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -54,7 +56,9 @@ ui <- fluidPage(
             radioButtons("disp", "Display",
                          choices = c(Head = "head",
                                      All = "all"),
-                         selected = "head")
+                         selected = "head"),
+             actionButton("go", "Generate Linear Regression"),
+            
         ),
 
         # Show a plot of the generated distribution
@@ -78,7 +82,11 @@ server <- function(input, output) {
                        quote = input$quote)
         return(df)
     })
-    
+      
+    model_In <- eventReactive(input$go, {
+    lm(formula = y ~ x,
+               data = dataInput())
+  })
     # output$distPlot <- renderPlot({
     #     # generate bins based on input$bins from ui.R
     #     x    <- faithful[, 2]
@@ -90,11 +98,44 @@ server <- function(input, output) {
     # 
     
     output$distPlot <- renderPlot({
-        plot(dataInput()$x,dataInput()$y)
+        #plot(dataInput()$x,dataInput()$y)
+        
+        ggplot() +
+  geom_point(aes(x = dataInput()$x, y = dataInput()$y),
+             colour = 'blue') + 
+           #Changed titles of x, y and Title of graph
+        ggtitle('Data from Uploaded Files') + 
+        xlab('x values') + 
+        ylab('y values')
     })
     
-    output$lmtPlot <- renderPlot({
-        plot(dataInput()$x,dataInput()$y)
+    output$lmPlot <- renderPlot({
+      #  plot(dataInput()$x,dataInput()$y)
+        
+        
+        model_sum <- summary(model_In())
+    # Creating variables for intercept,slope and R^2 & Outputing intercept,slope, and R^2 value
+        slope_val <- model_sum$coefficients[1,1] 
+        Label = paste("m =", slope_val) 
+        
+        intercept_val <- model_sum$coefficients[2,1] 
+        Label2 = paste("y =", intercept_val)
+        
+        R_val <- model_sum$r.squared
+        Label3 = paste("R^2 =", R_val)
+        
+ggplot() +
+  geom_point(aes(x = dataInput()$x, y = dataInput()$y),
+             colour = 'blue') +
+  geom_line(aes(x = dataInput()$x, y = predict(model_In(), newdata = dataInput())),
+            colour = 'red') +
+  ggtitle('Linear regression') +
+  xlab('x values') +
+  ylab('y values') +
+   
+annotate("text", x = 17, y = 5, label = Label) +
+annotate("text", x = 17, y = 4, label = Label2) +
+annotate("text", x = 17, y = 3, label = Label3)
     })
     
     
@@ -118,3 +159,4 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
