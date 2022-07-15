@@ -57,6 +57,7 @@ ui <- fluidPage(
                          choices = c(Head = "head",
                                      All = "all"),
                          selected = "head"),
+            #Created a interactive button for generation of linear model
              actionButton("go", "Generate Linear Regression"),
             
         ),
